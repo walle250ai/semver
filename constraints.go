@@ -21,14 +21,36 @@ type Constraints struct {
 	IncludePrerelease bool
 }
 
+// maxConstraintLen is the maximum allowed length of a constraint string.
+const maxConstraintLen = 512
+
+// maxConstraintGroups is the maximum number of OR groups allowed in a
+// constraint string.
+const maxConstraintGroups = 32
+
+// ErrConstraintTooLong is returned when a constraint string exceeds the
+// maximum allowed length.
+var ErrConstraintTooLong = fmt.Errorf("constraint string is too long (max %d bytes)", maxConstraintLen)
+
+// ErrTooManyConstraintGroups is returned when a constraint string contains
+// too many OR groups.
+var ErrTooManyConstraintGroups = fmt.Errorf("too many constraint groups (max %d)", maxConstraintGroups)
+
 // NewConstraint returns a Constraints instance that a Version instance can
 // be checked against. If there is a parse error it will be returned.
 func NewConstraint(c string) (*Constraints, error) {
+
+	if len(c) > maxConstraintLen {
+		return nil, ErrConstraintTooLong
+	}
 
 	// Rewrite - ranges into a comparison operation.
 	c = rewriteRange(c)
 
 	ors := strings.Split(c, "||")
+	if len(ors) > maxConstraintGroups {
+		return nil, ErrTooManyConstraintGroups
+	}
 	lenors := len(ors)
 	or := make([][]*constraint, lenors)
 	hasPre := make([]bool, lenors)

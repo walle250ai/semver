@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -640,6 +641,27 @@ func TestIsX(t *testing.T) {
 		if a != tc.c {
 			t.Errorf("Function isX error on %s", tc.t)
 		}
+	}
+}
+
+func TestNewConstraintTooLong(t *testing.T) {
+	long := strings.Repeat(">= 1.0.0 || ", 100)
+	_, err := NewConstraint(long)
+	if err != ErrConstraintTooLong {
+		t.Errorf("Expected ErrConstraintTooLong, got: %v", err)
+	}
+}
+
+func TestNewConstraintTooManyGroups(t *testing.T) {
+	// Build a string under the length limit but with too many OR groups.
+	parts := make([]string, maxConstraintGroups+1)
+	for i := range parts {
+		parts[i] = ">= 1.0.0"
+	}
+	c := strings.Join(parts, " || ")
+	_, err := NewConstraint(c)
+	if err != ErrTooManyConstraintGroups {
+		t.Errorf("Expected ErrTooManyConstraintGroups, got: %v", err)
 	}
 }
 

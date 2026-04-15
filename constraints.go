@@ -126,7 +126,7 @@ func (cs Constraints) Validate(v *Version) (bool, []error) {
 		for _, c := range o {
 			// Before running the check handle the case there the version is
 			// a prerelease and the check is not searching for prereleases.
-			if !(cs.IncludePrerelease || cs.containsPre[i]) && v.pre != "" {
+			if !cs.IncludePrerelease && !cs.containsPre[i] && v.pre != "" {
 				if !prerelesase {
 					em := fmt.Errorf("%q is a prerelease version and the constraint is only looking for release versions", v)
 					e = append(e, em)
